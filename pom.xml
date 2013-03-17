@@ -129,14 +129,14 @@
         <repository>
             <id>atsrepo</id>
             <name>repo.spree.de.atscommonsReleases</name>
-            <url>https://repo.spree.de/nexus/content/repositories/atscommons-releases</url>
+            <url>https://repo.spree.de/nexus/content/repositories/plugins-releases</url>
             <uniqueVersion>false</uniqueVersion>
         </repository>
 
         <snapshotRepository>
             <id>atsrepo</id>
             <name>repo.spree.de.atscommonsSnapshots</name>
-            <url>https://repo.spree.de/nexus/content/repositories/atscommons-snapshots</url>
+            <url>https://repo.spree.de/nexus/content/repositories/plugins-snapshots</url>
             <uniqueVersion>false</uniqueVersion>
         </snapshotRepository>
     </distributionManagement>
