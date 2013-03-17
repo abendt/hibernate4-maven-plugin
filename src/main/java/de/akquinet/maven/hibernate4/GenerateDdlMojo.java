@@ -34,27 +34,51 @@ public class GenerateDdlMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
     protected MavenProject project;
 
+    /**
+     * Set the end of statement delimiter.
+     */
     @Parameter(property = "hibernate4.delimiter", defaultValue = ";")
     private String delimiter;
 
+    /**
+     * The name of the file to which to write the create script.
+     */
     @Parameter(property = "hibernate4.createFilename", defaultValue = "create.sql")
-    private String createFilename;
+    private String createScriptFileName;
 
+    /**
+     * The name of the file to which to write the drop script.
+     */
     @Parameter(property = "hibernate4.dropFilename", defaultValue = "drop.sql")
-    private String dropFilename;
+    private String dropScriptFileName;
 
-    @Parameter(property = "hibernate4.persistenceUnitName")
+    /**
+     * Name of the Persistence Unit that should be processed.
+     */
+    @Parameter(property = "hibernate4.persistenceUnitName", required = true)
     private String persistenceUnitName;
 
+    /**
+     * generate the create script.
+     */
     @Parameter(property = "hibernate4.generateCreateDdl", defaultValue = "true")
-    private boolean create;
+    private boolean generateCreateScript;
 
+    /**
+     * generate the drop script.
+     */
     @Parameter(property = "hibernate4.generateDropDdl", defaultValue = "true")
-    private boolean drop;
+    private boolean generateDropScript;
 
+    /**
+     * the encoding used to write the files.
+     */
     @Parameter(property = "hibernate4.encoding", defaultValue = "UTF-8")
     private String encoding;
 
+    /**
+     * Specify where to place generated source files created by schema export.
+     */
     @Parameter(property = "hibernate4.outputDirectory", defaultValue = "${project.build.directory}/generated-resources/ddl")
     private File outputDirectory;
 
@@ -78,12 +102,12 @@ public class GenerateDdlMojo extends AbstractMojo {
                     Dialect.getDialect(hibernateConfiguration.getProperties()));
 
 
-            if (create) {
-                export(createFilename, delimiter, formatter, createSQL);
+            if (generateCreateScript) {
+                export(createScriptFileName, delimiter, formatter, createSQL);
             }
 
-            if (drop) {
-                export(dropFilename, delimiter, formatter, dropSQL);
+            if (generateDropScript) {
+                export(dropScriptFileName, delimiter, formatter, dropSQL);
             }
         } finally {
             Thread.currentThread().setContextClassLoader(old);
