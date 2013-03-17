@@ -26,6 +26,7 @@ import java.util.List;
 
 /**
  * @author Alphonse Bendt
+ * @author http://doingenterprise.blogspot.de/2012/05/schema-generation-with-hibernate-4-jpa.html
  */
 @Mojo(name = "generate-ddl", requiresDependencyResolution = ResolutionScope.COMPILE)
 public class GenerateDdlMojo extends AbstractMojo {
