@@ -1,6 +1,8 @@
 hibernate4-maven-plugin
 ===================
 
+This plugin is based on this [blog article](http://doingenterprise.blogspot.de/2012/05/schema-generation-with-hibernate-4-jpa.html).
+
 To use the plugin:
 
 You added the following snippet to your _pom_ file:
