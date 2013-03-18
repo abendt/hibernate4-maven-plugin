@@ -9,7 +9,7 @@ You added the following snippet to your _pom_ file:
             <plugin>
                 <groupId>de.akquinet.maven.hibernate4</groupId>
                 <artifactId>hibernate4-maven-plugin</artifactId>
-                <version>0.1</version>
+                <version>${project.version}</version>
 
                 <executions>
                     <execution>
@@ -27,13 +27,13 @@ You added the following snippet to your _pom_ file:
                     <dependency>
                         <groupId>org.hibernate</groupId>
                         <artifactId>hibernate-entitymanager</artifactId>
-                        <version>...</version>
+                        <version>4.x</version>
                     </dependency>
 
                     <dependency>
                         <groupId>org.hibernate</groupId>
                         <artifactId>hibernate-core</artifactId>
-                        <version>...</version>
+                        <version>4.x</version>
                     </dependency>
                 </dependencies>
             </plugin>
