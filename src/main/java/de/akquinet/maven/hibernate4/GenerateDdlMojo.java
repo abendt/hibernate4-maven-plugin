@@ -6,6 +6,7 @@ import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
@@ -25,10 +26,12 @@ import java.nio.charset.Charset;
 import java.util.List;
 
 /**
+ * use Hibernate SchemaExport to generate DDL drop/create scripts.
+ *
  * @author Alphonse Bendt
  * @author http://doingenterprise.blogspot.de/2012/05/schema-generation-with-hibernate-4-jpa.html
  */
-@Mojo(name = "generate-ddl", requiresDependencyResolution = ResolutionScope.COMPILE)
+@Mojo(name = "generate-ddl", defaultPhase = LifecyclePhase.PREPARE_PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class GenerateDdlMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
@@ -95,12 +98,13 @@ public class GenerateDdlMojo extends AbstractMojo {
             Ejb3Configuration jpaConfiguration = new Ejb3Configuration().configure(persistenceUnitName, null);
             Configuration hibernateConfiguration = jpaConfiguration.getHibernateConfiguration();
 
+            getLog().info("process persistence unit: " + persistenceUnitName);
+
             String[] createSQL = hibernateConfiguration.generateSchemaCreationScript(
                     Dialect.getDialect(hibernateConfiguration.getProperties()));
 
             String[] dropSQL = hibernateConfiguration.generateDropSchemaScript(
                     Dialect.getDialect(hibernateConfiguration.getProperties()));
-
 
             if (generateCreateScript) {
                 export(createScriptFileName, delimiter, formatter, createSQL);
@@ -120,10 +124,12 @@ public class GenerateDdlMojo extends AbstractMojo {
 
         PrintWriter writer = null;
         try {
-            writer = new PrintWriter(new File(outputDirectory, outFile), Charset.forName(encoding).name());
+            File file = new File(outputDirectory, outFile);
+            writer = new PrintWriter(file, Charset.forName(encoding).name());
             for (String string : createSQL) {
                 writer.print(formatter.format(string) + "\n" + delimiter + "\n");
             }
+            getLog().info("wrote: " + file);
         } catch (Exception e) {
             getLog().error(e.toString(), e);
         } finally {
