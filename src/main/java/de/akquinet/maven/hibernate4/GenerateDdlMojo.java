@@ -18,7 +18,9 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -31,7 +33,7 @@ import java.util.List;
  * @author Alphonse Bendt
  * @author http://doingenterprise.blogspot.de/2012/05/schema-generation-with-hibernate-4-jpa.html
  */
-@Mojo(name = "generate-ddl", defaultPhase = LifecyclePhase.PREPARE_PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE)
+@Mojo(name = "generate-ddl", threadSafe = true, defaultPhase = LifecyclePhase.PREPARE_PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class GenerateDdlMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
@@ -93,49 +95,66 @@ public class GenerateDdlMojo extends AbstractMojo {
         try {
             Thread.currentThread().setContextClassLoader(getClassloader(old));
 
-            Formatter formatter = FormatStyle.DDL.getFormatter();
-
-            Ejb3Configuration jpaConfiguration = new Ejb3Configuration().configure(persistenceUnitName, null);
-            Configuration hibernateConfiguration = jpaConfiguration.getHibernateConfiguration();
-
-            getLog().info("process persistence unit: " + persistenceUnitName);
-
-            String[] createSQL = hibernateConfiguration.generateSchemaCreationScript(
-                    Dialect.getDialect(hibernateConfiguration.getProperties()));
-
-            String[] dropSQL = hibernateConfiguration.generateDropSchemaScript(
-                    Dialect.getDialect(hibernateConfiguration.getProperties()));
-
-            if (generateCreateScript) {
-                export(createScriptFileName, delimiter, formatter, createSQL);
-            }
-
-            if (generateDropScript) {
-                export(dropScriptFileName, delimiter, formatter, dropSQL);
-            }
+            generateDdl();
         } finally {
             Thread.currentThread().setContextClassLoader(old);
         }
     }
 
-    private void export(String outFile, String delimiter, Formatter formatter, String[] createSQL) {
+    private void generateDdl() {
+        Formatter formatter = FormatStyle.DDL.getFormatter();
+
+        Ejb3Configuration jpaConfiguration = new Ejb3Configuration().configure(persistenceUnitName, null);
+        Configuration hibernateConfiguration = jpaConfiguration.getHibernateConfiguration();
+
+        getLog().info("process persistence unit: " + persistenceUnitName);
+
+        if (generateCreateScript) {
+            generateCreate(formatter, hibernateConfiguration);
+        }
+
+        if (generateDropScript) {
+            generateDrop(formatter, hibernateConfiguration);
+        }
+    }
+
+    private void generateDrop(Formatter formatter, Configuration hibernateConfiguration) {
+        String[] dropSQL = hibernateConfiguration.generateDropSchemaScript(
+                Dialect.getDialect(hibernateConfiguration.getProperties()));
+        export(dropScriptFileName, formatter, dropSQL);
+    }
+
+    private void generateCreate(Formatter formatter, Configuration hibernateConfiguration) {
+        String[] createSQL = hibernateConfiguration.generateSchemaCreationScript(
+                Dialect.getDialect(hibernateConfiguration.getProperties()));
+        export(createScriptFileName, formatter, createSQL);
+    }
+
+    private void export(String outFile, Formatter formatter, String[] createSQL) {
 
         outputDirectory.mkdirs();
 
-        PrintWriter writer = null;
+        File file = new File(outputDirectory, outFile);
+
         try {
-            File file = new File(outputDirectory, outFile);
-            writer = new PrintWriter(file, Charset.forName(encoding).name());
-            for (String string : createSQL) {
-                writer.print(formatter.format(string) + "\n" + delimiter + "\n");
-            }
-            getLog().info("wrote: " + file);
-        } catch (Exception e) {
-            getLog().error(e.toString(), e);
-        } finally {
-            if (writer != null) {
+            PrintWriter writer = new PrintWriter(file, Charset.forName(encoding).name());
+
+            try {
+                for (String string : createSQL) {
+                    writer.print(formatter.format(string) + "\n" + delimiter + "\n");
+                }
+                getLog().info("wrote: " + file);
+            } finally {
                 writer.close();
             }
+        } catch (FileNotFoundException e) {
+            getLog().error(e.toString(), e);
+
+            throw new RuntimeException(e);
+        } catch (UnsupportedEncodingException e) {
+            getLog().error(e.toString(), e);
+
+            throw new RuntimeException(e);
         }
     }
 
