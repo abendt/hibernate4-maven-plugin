@@ -1,17 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>de.akquinet.maven.hibernate4</groupId>
+    <groupId>de.akquinet.maven</groupId>
     <artifactId>hibernate4-maven-plugin</artifactId>
     <version>0.3-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
+    <url>https://akquinet.github.com/hibernate4-maven-plugin</url>
+
+    <licenses>
+        <license>
+            <name>lgpl</name>
+            <url>http://www.gnu.org/licenses/lgpl-2.1.txt</url>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>akquinet AG</name>
+        <url>http://www.akquinet.de</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <id>abendt</id>
+            <name>Alphonse Bendt</name>
+            <email>alphonse (dot) bendt (at) akquinet.de</email>
+            <organization>akquinet AG</organization>
+        </developer>
+    </developers>
 
     <scm>
-        <connection>scm:git:https://github.com/abendt/hibernate4-maven-plugin.git</connection>
-        <developerConnection>scm:git:https://github.com/abendt/hibernate4-maven-plugin.git</developerConnection>
-        <url>https://github.com/abendt/hibernate4-maven-plugin</url>
+        <connection>scm:git:https://github.com/akquinet/hibernate4-maven-plugin.git</connection>
+        <developerConnection>scm:git:https://github.com/akquinet/hibernate4-maven-plugin.git</developerConnection>
+        <url>https://github.com/akquinet/hibernate4-maven-plugin</url>
     </scm>
+
+    <issueManagement>
+        <system>https://github.com/</system>
+        <url>https://github.com/akquinet/hibernate4-maven-plugin/issues</url>
+    </issueManagement>
+
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -171,24 +206,9 @@
             <artifactId>guava</artifactId>
             <version>14.0.1</version>
         </dependency>
-
     </dependencies>
 
     <distributionManagement>
-        <repository>
-            <id>atsrepo</id>
-            <name>repo.spree.de.atscommonsReleases</name>
-            <url>https://repo.spree.de/nexus/content/repositories/plugins-releases</url>
-            <uniqueVersion>false</uniqueVersion>
-        </repository>
-
-        <snapshotRepository>
-            <id>atsrepo</id>
-            <name>repo.spree.de.atscommonsSnapshots</name>
-            <url>https://repo.spree.de/nexus/content/repositories/plugins-snapshots</url>
-            <uniqueVersion>false</uniqueVersion>
-        </snapshotRepository>
-
         <site>
             <id>website</id>
             <url>scp://webhost.company.com/www/website</url>
