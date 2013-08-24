@@ -11,6 +11,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.Ejb3Configuration;
@@ -21,6 +22,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -58,9 +61,9 @@ public class GenerateDdlMojo extends AbstractMojo {
     private String dropScriptFileName;
 
     /**
-     * Name of the Persistence Unit that should be processed.
+     * Name of the Persistence Unit that should be processed. This property is required for JPA strategy.
      */
-    @Parameter(property = "hibernate4.persistenceUnitName", required = true)
+    @Parameter(property = "hibernate4.persistenceUnitName", required = false)
     private String persistenceUnitName;
 
     /**
@@ -87,6 +90,12 @@ public class GenerateDdlMojo extends AbstractMojo {
     @Parameter(property = "hibernate4.outputDirectory", defaultValue = "${project.build.directory}/generated-resources/ddl")
     private File outputDirectory;
 
+    /**
+     * Specify configuration building strategy. Available strategies are {@code JPA} and {@code ANNOTATION}.
+     */
+    @Parameter(property = "hibernate4.configurationStrategy", defaultValue = "JPA")
+    private ConfigurationStrategy configurationStrategy;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
@@ -104,8 +113,8 @@ public class GenerateDdlMojo extends AbstractMojo {
     private void generateDdl() {
         Formatter formatter = FormatStyle.DDL.getFormatter();
 
-        Ejb3Configuration jpaConfiguration = new Ejb3Configuration().configure(persistenceUnitName, null);
-        Configuration hibernateConfiguration = jpaConfiguration.getHibernateConfiguration();
+        Configuration hibernateConfiguration = configurationStrategy.buildConfiguration(this);
+        addEnversIfAvailable(hibernateConfiguration);
 
         getLog().info("process persistence unit: " + persistenceUnitName);
 
@@ -115,6 +124,22 @@ public class GenerateDdlMojo extends AbstractMojo {
 
         if (generateDropScript) {
             generateDrop(formatter, hibernateConfiguration);
+        }
+    }
+
+    private void addEnversIfAvailable(Configuration hibernateConfiguration) {
+        hibernateConfiguration.buildMappings();
+        try {
+            Class<?> auditConfigurationClass = Class.forName("org.hibernate.envers.configuration.AuditConfiguration");
+            Method getFor = auditConfigurationClass.getMethod("getFor", Configuration.class);
+            getFor.invoke(null, hibernateConfiguration);
+        } catch (ClassNotFoundException ignore) {
+        } catch (InvocationTargetException e) {
+            throw new IllegalArgumentException("Cannot build envers enabled schema",e);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException("Cannot build envers enabled schema",e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException("Cannot build envers enabled schema",e);
         }
     }
 
@@ -177,5 +202,27 @@ public class GenerateDdlMojo extends AbstractMojo {
         } catch (DependencyResolutionRequiredException e) {
             throw new AssertionError(e);
         }
+    }
+
+    public enum ConfigurationStrategy {
+        JPA {
+            @Override
+            Configuration buildConfiguration(GenerateDdlMojo mojo) {
+                if (mojo.persistenceUnitName == null || mojo.persistenceUnitName.length() == 0) {
+                    throw new IllegalArgumentException("persistentUnitName is required for JPA configurationStrategy");
+                }
+                Ejb3Configuration jpaConfiguration = new Ejb3Configuration().configure(mojo.persistenceUnitName, null);
+                return jpaConfiguration.getHibernateConfiguration();
+            }
+        },
+        ANNOTATION{
+            @Override
+            Configuration buildConfiguration(GenerateDdlMojo mojo) {
+                return new AnnotationConfiguration().configure();
+            }
+        },
+        ;
+
+        abstract Configuration buildConfiguration(GenerateDdlMojo mojo);
     }
 }
